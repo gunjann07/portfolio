@@ -1,58 +1,32 @@
-// =====================================================
-// SMOOTH SCROLL & NAVIGATION
-// =====================================================
-
 document.addEventListener('DOMContentLoaded', function() {
-    
-    // Smooth scroll for navigation links
+    // Smooth scroll
     const navLinks = document.querySelectorAll('a[href^="#"]');
-    
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const targetId = this.getAttribute('href');
-            
-            if (targetId === '#') return;
-            
+            if (!targetId || targetId === '#') return;
             const targetSection = document.querySelector(targetId);
-            
             if (targetSection) {
-                const navHeight = document.querySelector('.navbar').offsetHeight;
+                const navbarElement = document.querySelector('.navbar');
+                const navHeight = navbarElement ? navbarElement.offsetHeight : 0;
                 const targetPosition = targetSection.offsetTop - navHeight;
-                
-                window.scrollTo({
-                    top: targetPosition,
-                    behavior: 'smooth'
-                });
+                window.scrollTo({ top: targetPosition, behavior: 'smooth' });
             }
         });
     });
     
-    
-    // =====================================================
-    // NAVBAR SCROLL EFFECT
-    // =====================================================
-    
+    // Navbar scroll effect
     const navbar = document.querySelector('.navbar');
-    
     window.addEventListener('scroll', function() {
-        if (window.pageYOffset > 50) {
+        if (window.scrollY > 50) {
             navbar.style.boxShadow = '0 4px 20px rgba(155, 143, 182, 0.1)';
         } else {
             navbar.style.boxShadow = 'none';
         }
     });
     
-    
-    // =====================================================
-    // SCROLL REVEAL ANIMATIONS
-    // =====================================================
-    
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-    
+    const SCROLL_REVEAL_OPTIONS = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
     const observer = new IntersectionObserver(function(entries) {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -60,81 +34,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 entry.target.style.transform = 'translateY(0)';
             }
         });
-    }, observerOptions);
+    }, SCROLL_REVEAL_OPTIONS);
     
-    // Observe case studies
-    const caseStudies = document.querySelectorAll('.case-study');
-    caseStudies.forEach((study, index) => {
-        study.style.opacity = '0';
-        study.style.transform = 'translateY(30px)';
-        study.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        study.style.transitionDelay = `${index * 0.1}s`;
-        observer.observe(study);
+    const elementsToAnimate = document.querySelectorAll('.project-card, .service-card, .process-step, .campaign-block');
+    elementsToAnimate.forEach((el, index) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(30px)';
+        el.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+        observer.observe(el);
     });
     
-    // Observe approach steps
-    const steps = document.querySelectorAll('.approach-step');
-    steps.forEach((step, index) => {
-        step.style.opacity = '0';
-        step.style.transform = 'translateY(30px)';
-        step.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        step.style.transitionDelay = `${index * 0.1}s`;
-        observer.observe(step);
-    });
-    
-    
-    // =====================================================
-    // IMAGE LAZY LOADING WITH FADE-IN
-    // =====================================================
-    
+    // Image lazy loading
     const images = document.querySelectorAll('img');
     const imageObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const img = entry.target;
-                img.style.opacity = '0';
-                img.style.transition = 'opacity 0.6s ease-in';
-                
+                img.classList.add('lazy-loading');
                 img.onload = () => {
-                    img.style.opacity = '1';
+                    img.classList.remove('lazy-loading');
+                    img.classList.add('lazy-loaded');
                 };
-                
                 if (img.complete) {
-                    img.style.opacity = '1';
+                    img.classList.remove('lazy-loading');
+                    img.classList.add('lazy-loaded');
                 }
-                
                 imageObserver.unobserve(img);
             }
         });
     });
-    
-    images.forEach(img => imageObserver.observe(img));
-    
-    
-    // =====================================================
-    // MOBILE MENU TOGGLE
-    // =====================================================
-    
-    // Create mobile menu button if needed
-    if (window.innerWidth <= 768) {
+
+    function handleMobileMenu() {
         const navContainer = document.querySelector('.nav-container');
         const navMenu = document.querySelector('.nav-menu');
-        
-        if (navContainer && navMenu) {
-            const menuButton = document.createElement('button');
-            menuButton.className = 'mobile-menu-button';
-            menuButton.innerHTML = '☰';
-            menuButton.style.cssText = `
-                background: none;
-                border: none;
-                font-size: 1.8rem;
-                color: var(--color-primary-dark);
-                cursor: pointer;
-                padding: 0.5rem;
-            `;
-            
-            navContainer.appendChild(menuButton);
-            
+        const existingButton = document.querySelector('.mobile-menu-button');
+
+        if (window.innerWidth <= 768) {
+            if (navContainer && navMenu && !existingButton) {
+                const menuButton = document.createElement('button');
+                menuButton.className = 'mobile-menu-button';
+                menuButton.innerHTML = '☰';
+                menuButton.style.cssText = 'background: none; border: none; font-size: 1.8rem; color: var(--color-primary-dark); cursor: pointer; padding: 0.5rem;';
+                navContainer.appendChild(menuButton);
             menuButton.addEventListener('click', () => {
                 if (navMenu.style.display === 'flex') {
                     navMenu.style.display = 'none';
@@ -152,8 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     menuButton.innerHTML = '✕';
                 }
             });
-            
-            // Close menu when clicking a link
+
             navMenu.querySelectorAll('a').forEach(link => {
                 link.addEventListener('click', () => {
                     navMenu.style.display = 'none';
@@ -161,68 +101,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             });
         }
+    } else if (existingButton) {
+        existingButton.remove();
+        navMenu.style.display = '';
     }
-    
-    
-    // =====================================================
-    // SMOOTH HOVER EFFECTS
-    // =====================================================
-    
-    // Add hover effect to contact cards
-    const contactCards = document.querySelectorAll('.contact-card');
-    contactCards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-8px)';
-        });
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-        });
-    });
-    
-    
-    // =====================================================
-    // CONSOLE MESSAGE
-    // =====================================================
-    
-    console.log('%c👋 Welcome to my portfolio!', 'font-size: 20px; color: #9B8FB6; font-weight: bold;');
-    console.log('%cLike what you see? Let\'s connect!', 'font-size: 14px; color: #7968A0;');
-    
-});
+}
 
+handleMobileMenu();
+window.addEventListener('resize', handleMobileMenu);
 
-// =====================================================
-// PAGE LOAD
-// =====================================================
-
-window.addEventListener('load', function() {
+if (document.body) {
     document.body.classList.add('loaded');
+}
+console.log('%c👋 Welcome to my portfolio!', 'font-size: 20px; color: #9B8FB6; font-weight: bold;');
 });
-
-
-// =====================================================
-// UTILITY FUNCTIONS
-// =====================================================
-
-// Debounce function for scroll events
-function debounce(func, wait = 10) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-// Check if element is in viewport
-function isInViewport(element) {
-    const rect = element.getBoundingClientRect();
-    return (
-        rect.top >= 0 &&
-        rect.left >= 0 &&
-        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-    );
-}
